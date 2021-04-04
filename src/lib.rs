@@ -1,15 +1,19 @@
+#[derive(Debug, PartialEq)]
 pub struct Node<Id, Item>
 where
-    Id: Copy + PartialEq + Eq,
+    Id: Copy + Eq,
 {
-    id: Id,
-    deps: Vec<Id>,
-    value: Item,
+    /// unique identifier
+    pub id: Id,
+    /// list of dependencies
+    pub deps: Vec<Id>,
+    /// value stored in the node
+    pub value: Item,
 }
 
 impl<Id, Item> Node<Id, Item>
 where
-    Id: Copy + Clone + PartialEq + Eq,
+    Id: Copy + Eq,
 {
     pub fn new(id: Id, deps: Vec<Id>, value: Item) -> Self {
         Self { id, deps, value }
@@ -18,8 +22,20 @@ where
 
 #[derive(PartialEq, Debug)]
 pub enum TopsortError<Id> {
+    /// * `Id` - target that wasn't found
     TargetNotFound(Id),
+    /// * `Id` - target that depends on itself
     CyclicDependency(Id),
+}
+
+fn find_index<Id, Item>(domain: &[Node<Id, Item>], target: Id) -> Result<usize, TopsortError<Id>>
+where
+    Id: Copy + Eq,
+{
+    match domain.iter().position(|node| node.id == target) {
+        Some(index) => Ok(index),
+        None => Err(TopsortError::TargetNotFound(target)),
+    }
 }
 
 fn visit<Id, Item, F>(
@@ -30,16 +46,10 @@ fn visit<Id, Item, F>(
     current_path: &mut Vec<Id>,
 ) -> Result<(), TopsortError<Id>>
 where
-    Id: Copy + PartialEq + Eq,
+    Id: Copy + Eq,
     F: FnMut(&Node<Id, Item>),
 {
-    // find index
-    let index = {
-        match domain.iter().position(|node| node.id == target) {
-            Some(index) => Ok(index),
-            None => Err(TopsortError::TargetNotFound(target)),
-        }
-    }?;
+    let index = find_index(domain, target)?;
 
     if visited[index] {
         return Ok(());
@@ -49,6 +59,8 @@ where
     if current_path.contains(&target) {
         return Err(TopsortError::CyclicDependency(target));
     }
+
+    // push id to the stack
     current_path.push(target);
 
     // visit dependencies
@@ -59,17 +71,39 @@ where
     // call callback
     cb(&domain[index]);
     visited[index] = true;
+
+    // pop id from the stack
     current_path.pop();
     Ok(())
 }
 
+/// calls `cb` with nodes from `domain` in topological order, ending on the node with id of `target`
+///
+/// # Examples:
+/// ```
+///     use szyk::*;
+///
+///     let mut out = Vec::new();
+///     let result = topsort(
+///         &[
+///             Node::new("cat", vec!["dog"], "Garfield"),
+///             Node::new("dog", vec![], "Odie"),
+///         ],
+///         "cat",
+///         &mut |node| {
+///             out.push(node.id);
+///         }
+///     );
+///     assert_eq!(result, Ok(()));
+///     assert_eq!(out, vec!["dog", "cat"]);
+/// ```
 pub fn topsort<Id, Item, F>(
     domain: &[Node<Id, Item>],
     target: Id,
     cb: &mut F,
 ) -> Result<(), TopsortError<Id>>
 where
-    Id: Copy + Clone + PartialEq + Eq,
+    Id: Copy + Eq,
     F: FnMut(&Node<Id, Item>),
 {
     let size = domain.into_iter().size_hint().0;
@@ -79,12 +113,27 @@ where
     visit(domain, target, cb, &mut visited, &mut current_path)
 }
 
+/// returns values of nodes from `domain` in topological order, ending on the node with id of `target`
+///
+/// # Examples:
+/// ```
+///     use szyk::*;
+///
+///     let result = topsort_values(
+///         &[
+///             Node::new("cat", vec!["dog"], "Garfield"),
+///             Node::new("dog", vec![], "Odie"),
+///         ],
+///         "cat",
+///     );
+///     assert_eq!(result, Ok(vec!["Odie", "Garfield"]));
+/// ```
 pub fn topsort_values<Id, Item>(
     domain: &[Node<Id, Item>],
     target: Id,
 ) -> Result<Vec<Item>, TopsortError<Id>>
 where
-    Id: Copy + PartialEq + Eq,
+    Id: Copy + Eq,
     Item: Copy,
 {
     let mut out = Vec::new();
@@ -116,6 +165,19 @@ mod tests {
         );
         assert_eq!(result, Ok(()));
         assert_eq!(out, vec!["world", "cat", "hello"]);
+    }
+
+    #[test]
+    fn topsort_values_works() {
+        let result = topsort_values(
+            &vec![
+                Node::new(1, vec![2, 3], "hello"),
+                Node::new(2, vec![], "world"),
+                Node::new(3, vec![2], "cat"),
+            ],
+            1,
+        );
+        assert_eq!(result, Ok(vec!["world", "cat", "hello"]));
     }
 
     #[test]
