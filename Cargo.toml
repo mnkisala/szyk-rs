@@ -1,7 +1,7 @@
 [package]
 name = "szyk"
 license = "ISC"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["nm <mnkisala@gmail.com>"]
 edition = "2018"
 description = "generic topological sort"
