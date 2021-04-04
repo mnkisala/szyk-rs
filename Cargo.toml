@@ -5,6 +5,9 @@ version = "0.1.1"
 authors = ["nm <mnkisala@gmail.com>"]
 edition = "2018"
 description = "generic topological sort"
+readme = "README.md"
+documentation = "https://docs.rs/szyk"
+repository = "https://github.com/mnkisala/szyk-rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
