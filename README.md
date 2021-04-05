@@ -1,7 +1,10 @@
 # szyk-rs
 Generic topsort for Rust
 
-![crates.io](https://img.shields.io/crates/v/szyk.svg)
+[![crates.io][crates-badge]][crates-url]
+[crates-badge]: https://img.shields.io/crates/v/szyk.svg
+[crates-url]: https://crates.io/crates/szyk
+
 
 ## Example
 ```rust
