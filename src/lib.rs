@@ -2,9 +2,10 @@
 //!
 //! # Examples
 //! ```
-//!     use szyk::*;
+//!     use szyk::Node;
+//!     use szyk;
 //!
-//!     let result = topsort_values(
+//!     let result = szyk::sort(
 //!         &[
 //!             Node::new("wooden pickaxe", vec!["planks", "sticks"], "Pickaxe"),
 //!             Node::new("planks", vec!["wood"], "Planks"),
@@ -102,7 +103,7 @@ where
 ///     use szyk::*;
 ///
 ///     let mut out = Vec::new();
-///     let result = topsort(
+///     let result = sort_cb(
 ///         &[
 ///             Node::new("cat", vec!["dog"], "Garfield"),
 ///             Node::new("dog", vec![], "Odie"),
@@ -115,7 +116,7 @@ where
 ///     assert_eq!(result, Ok(()));
 ///     assert_eq!(out, vec!["dog", "cat"]);
 /// ```
-pub fn topsort<Id, Item, F>(
+pub fn sort_cb<Id, Item, F>(
     domain: &[Node<Id, Item>],
     target: Id,
     cb: &mut F,
@@ -137,7 +138,7 @@ where
 /// ```
 ///     use szyk::*;
 ///
-///     let result = topsort_values(
+///     let result = sort(
 ///         &[
 ///             Node::new("cat", vec!["dog"], "Garfield"),
 ///             Node::new("dog", vec![], "Odie"),
@@ -146,16 +147,13 @@ where
 ///     );
 ///     assert_eq!(result, Ok(vec!["Odie", "Garfield"]));
 /// ```
-pub fn topsort_values<Id, Item>(
-    domain: &[Node<Id, Item>],
-    target: Id,
-) -> Result<Vec<Item>, TopsortError<Id>>
+pub fn sort<Id, Item>(domain: &[Node<Id, Item>], target: Id) -> Result<Vec<Item>, TopsortError<Id>>
 where
     Id: Copy + Eq,
     Item: Copy,
 {
     let mut out = Vec::new();
-    topsort(domain, target, &mut |node: &Node<_, _>| {
+    sort_cb(domain, target, &mut |node: &Node<_, _>| {
         out.push(node.value);
     })?;
 
@@ -168,9 +166,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn it_works() {
+    fn sort_cb_works() {
         let mut out = Vec::new();
-        let result = topsort(
+        let result = sort_cb(
             &[
                 Node::new(1, vec![2, 3], "hello"),
                 Node::new(2, vec![], "world"),
@@ -186,8 +184,8 @@ mod tests {
     }
 
     #[test]
-    fn topsort_values_works() {
-        let result = topsort_values(
+    fn sort_works() {
+        let result = sort(
             &vec![
                 Node::new(1, vec![2, 3], "hello"),
                 Node::new(2, vec![], "world"),
@@ -200,7 +198,7 @@ mod tests {
 
     #[test]
     fn target_not_found() {
-        let result = topsort_values(
+        let result = sort(
             &vec![
                 Node::new(1, vec![2, 3], "hello"),
                 Node::new(2, vec![], "world"),
@@ -213,7 +211,7 @@ mod tests {
 
     #[test]
     fn cyclic_dependency() {
-        let result = topsort_values(
+        let result = sort(
             &vec![
                 Node::new(1, vec![2, 3], "hello"),
                 Node::new(2, vec![1], "world"),
@@ -226,7 +224,7 @@ mod tests {
 
     #[test]
     fn empty_domain() {
-        let result = topsort_values(&[] as &[Node<i32, i32>], 1);
+        let result = sort(&[] as &[Node<i32, i32>], 1);
         assert_eq!(result, Err(TopsortError::TargetNotFound(1)));
     }
 }
