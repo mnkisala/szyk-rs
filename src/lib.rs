@@ -150,11 +150,11 @@ where
 pub fn sort<Id, Item>(domain: &[Node<Id, Item>], target: Id) -> Result<Vec<Item>, TopsortError<Id>>
 where
     Id: Copy + Eq,
-    Item: Copy,
+    Item: Clone,
 {
     let mut out = Vec::new();
     sort_cb(domain, target, &mut |node: &Node<_, _>| {
-        out.push(node.value);
+        out.push(node.value.clone());
     })?;
 
     Ok(out)
