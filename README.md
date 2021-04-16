@@ -9,15 +9,17 @@ Generic topsort for Rust
 
 ## Example
 ```rust
-    use szyk::*;
-    let result = topsort_values(
-        &[
-            Node::new("wooden pickaxe", vec!["planks", "sticks"], "Pickaxe"),
-            Node::new("planks", vec!["wood"], "Planks"),
-            Node::new("sticks", vec!["planks"], "Sticks"),
-            Node::new("wood", vec![], "Wood"),
-        ],
-        "wooden pickaxe",
-    );
-    assert_eq!(result, Ok(vec!["Wood", "Planks", "Sticks", "Pickaxe"]));
+use szyk::Node;
+use szyk;
+
+let result = szyk::sort(
+    &[
+        Node::new("wooden pickaxe", vec!["planks", "sticks"], "Pickaxe"),
+        Node::new("planks", vec!["wood"], "Planks"),
+        Node::new("sticks", vec!["planks"], "Sticks"),
+        Node::new("wood", vec![], "Wood"),
+    ],
+    "wooden pickaxe",
+);
+assert_eq!(result, Ok(vec!["Wood", "Planks", "Sticks", "Pickaxe"]));
 ```
